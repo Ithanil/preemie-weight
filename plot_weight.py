@@ -2,19 +2,25 @@ import matplotlib.pyplot as plt
 import csv
 import argparse
 from datetime import datetime
+from typing import List, Tuple
 
 DATA_DIR = 'data'
 DEFAULT_FILENAME = 'weight.csv'
 
-def main():
-    parser = argparse.ArgumentParser(description='Plot weight curve from CSV.')
-    parser.add_argument('filename', nargs='?', default=DEFAULT_FILENAME, help=f'CSV filename (default: {DEFAULT_FILENAME})')
-    args = parser.parse_args()
+def load_data(filename: str) -> Tuple[List[datetime], List[float]]:
+    """
+    Load date and weight data from a CSV file.
 
-    dates = []
-    weights = []
+    Parameters:
+    filename (str): The name of the CSV file to load.
 
-    file_path = f"{DATA_DIR}/{args.filename}"
+    Returns:
+    Tuple[List[datetime], List[float]]: Lists of dates and corresponding weights.
+    """
+    dates: List[datetime] = []
+    weights: List[float] = []
+
+    file_path = f"{DATA_DIR}/{filename}"
 
     try:
         with open(file_path, 'r') as f:
@@ -30,22 +36,44 @@ def main():
                     except ValueError as e:
                         print(f"Skipping invalid row {row}: {e}")
     except FileNotFoundError:
-        print(f"Error: File '{file_path}' not found.")
-        return
+        print(f"Error: File '{file_path}' not found. Ensure the file exists in the 'data/' directory.")
+        return [], []
 
     if not dates:
-        print("No valid data found in the file.")
-        return
+        print("No valid data found in the file. Please check the file format and contents.")
+    
+    return dates, weights
 
+def plot_data(dates: List[datetime], weights: List[float]) -> None:
+    """
+    Plot the weight data against dates.
+
+    Parameters:
+    dates (List[datetime]): List of dates.
+    weights (List[float]): Corresponding list of weights.
+    """
     plt.figure(figsize=(10, 5))
     plt.plot(dates, weights, marker='o', linestyle='-', color='b')
     plt.xlabel('Date')
     plt.ylabel('Weight [g]')
     plt.title('Weight Development')
-    plt.grid(True)
+    plt.grid(True, linestyle='--')
     plt.xticks(rotation=45)
     plt.tight_layout()
     plt.show()
+
+def main() -> None:
+    """
+    Main function to parse arguments, load data, and plot the weight curve.
+    """
+    parser = argparse.ArgumentParser(description='Plot weight curve from CSV.')
+    parser.add_argument('filename', nargs='?', default=DEFAULT_FILENAME, help=f'CSV filename (default: {DEFAULT_FILENAME})')
+    args = parser.parse_args()
+
+    dates, weights = load_data(args.filename)
+
+    if dates:
+        plot_data(dates, weights)
 
 if __name__ == "__main__":
     main()
