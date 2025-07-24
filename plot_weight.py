@@ -1,19 +1,32 @@
+"""
+Plot weight curves from logged weight data of a premature baby, in comparison to the standard Fenton growth curves at various percentiles.
+
+This script loads weight data from a CSV file and plots it against the Fenton growth curves for comparison. The script expects a CSV file with two columns: date and weight. The Fenton growth data is loaded from predefined CSV files in the 'fenton_boys/' directory.
+
+Usage:
+python plot_weight.py <filename> --due-date <YYYY-MM-DD>
+"""
+
 import matplotlib.pyplot as plt
 import csv
 import argparse
 from datetime import datetime, timedelta
 from typing import List, Tuple, Dict
+import logging
 
-DATA_DIR = 'data'
-FENTON_DIR = 'fenton_boys'
-DEFAULT_FILENAME = 'weight.csv'
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def load_data(filename: str) -> Tuple[List[datetime], List[float]]:
+DATA_DIRECTORY = 'data'
+FENTON_DIRECTORY = 'fenton_boys'
+DEFAULT_FILE_NAME = 'weight.csv'
+
+def load_data(file_name: str) -> Tuple[List[datetime], List[float]]:
     """
     Load date and weight data from a CSV file.
 
     Parameters:
-    filename (str): The name of the CSV file to load.
+    file_name (str): The name of the CSV file to load.
 
     Returns:
     Tuple[List[datetime], List[float]]: Lists of dates and corresponding weights.
@@ -21,7 +34,7 @@ def load_data(filename: str) -> Tuple[List[datetime], List[float]]:
     dates: List[datetime] = []
     weights: List[float] = []
 
-    file_path = f"{DATA_DIR}/{filename}"
+    file_path = f"{DATA_DIRECTORY}/{file_name}"
 
     try:
         with open(file_path, 'r') as f:
@@ -35,13 +48,14 @@ def load_data(filename: str) -> Tuple[List[datetime], List[float]]:
                         dates.append(date)
                         weights.append(weight)
                     except ValueError as e:
-                        print(f"Skipping invalid row {row}: {e}")
+                        logging.warning(f"Skipping invalid row {row}: {e}")
     except FileNotFoundError:
-        print(f"Error: File '{file_path}' not found. Ensure the file exists in the 'data/' directory.")
+        logging.error(f"Error: File '{file_path}' not found. Ensure the file exists in the 'data/' directory.")
         return [], []
 
     if not dates:
-        print("No valid data found in the file. Please check the file format and contents.")
+        logging.warning("No valid data found in the file. Please check the file format and contents.")
+        return [], []
 
     return dates, weights
 
@@ -53,12 +67,12 @@ def load_fenton_data(due_date: datetime) -> Dict[str, Tuple[List[datetime], List
     due_date (datetime): The expected due date.
 
     Returns:
-    Dict[str, List[Tuple[datetime, float]]]: Dictionary mapping percentile to list of (date, weight) tuples.
+    Dict[str, Tuple[List[datetime], List[float]]]: Dictionary mapping percentile to list of (date, weight) tuples.
     """
     fenton_data: Dict[str, Tuple[List[datetime], List[float]]] = {}
 
     for percentile in ['3%', '10%', '50%', '90%', '97%']:
-        file_path = f"{FENTON_DIR}/{percentile}.csv"
+        file_path = f"{FENTON_DIRECTORY}/{percentile}.csv"
         try:
             with open(file_path, 'r') as f:
                 reader = csv.reader(f)
@@ -72,26 +86,31 @@ def load_fenton_data(due_date: datetime) -> Dict[str, Tuple[List[datetime], List
                             fenton_data[percentile][0].append(date)
                             fenton_data[percentile][1].append(weight)
                         except ValueError as e:
-                            print(f"Skipping invalid row {row} in {file_path}: {e}")
+                            logging.warning(f"Skipping invalid row {row} in {file_path}: {e}")
         except FileNotFoundError:
-            print(f"Error: File '{file_path}' not found. Ensure the file exists in the 'fenton_boys/' directory.")
+            logging.error(f"Error: File '{file_path}' not found. Ensure the file exists in the 'fenton_boys/' directory.")
 
     return fenton_data
 
-def plot_data(dates: List[datetime], weights: List[float], fenton_data: Dict[str, Tuple[List[datetime], List[float]]]) -> None:
+def plot_data(baby_dates: List[datetime], baby_weights: List[float], fenton_growth_data: Dict[str, Tuple[List[datetime], List[float]]]) -> None:
     """
     Plot the weight data against dates.
 
     Parameters:
-    dates (List[datetime]): List of dates.
-    weights (List[float]): Corresponding list of weights.
-    fenton_data (Dict[str, List[Tuple[datetime, float]]]): Fenton growth data.
+    baby_dates (List[datetime]): List of dates for the baby's weight measurements.
+    baby_weights (List[float]): Corresponding list of weights for the baby.
+    fenton_growth_data (Dict[str, Tuple[List[datetime], List[float]]]): Fenton growth data for comparison.
     """
     plt.figure(figsize=(10, 5))
-    plt.plot(dates, weights, marker='s', linestyle='', color='b', label='Baby Weight')
+    plt.plot(baby_dates, baby_weights, marker='o', linestyle='', color='b', label='Baby Weight')
 
-    for percentile, data in fenton_data.items():
+    for percentile, data in fenton_growth_data.items():
         plt.plot(data[0], data[1], linestyle='--', label=f'{percentile} Percentile')
+
+    # Set x-axis limits with a small margin
+    date_range = max(baby_dates) - min(baby_dates)
+    margin = date_range * 0.05  # 5% margin
+    plt.xlim(min(baby_dates) - margin, max(baby_dates) + margin)
 
     plt.xlabel('Date')
     plt.ylabel('Weight [g]')
@@ -107,16 +126,16 @@ def main() -> None:
     Main function to parse arguments, load data, and plot the weight curve.
     """
     parser = argparse.ArgumentParser(description='Plot weight curve from CSV.')
-    parser.add_argument('filename', nargs='?', default=DEFAULT_FILENAME, help=f'CSV filename (default: {DEFAULT_FILENAME})')
-    parser.add_argument('--due-date', type=str, required=True, help='Expected due date in YYYY-MM-DD format')
+    parser.add_argument('file_name', nargs='?', default=DEFAULT_FILE_NAME, help=f'CSV filename (default: {DEFAULT_FILE_NAME})')
+    parser.add_argument('-d', '--due-date', type=str, required=True, help='Expected due date in YYYY-MM-DD format')
     args = parser.parse_args()
 
     due_date = datetime.strptime(args.due_date, '%Y-%m-%d')
-    dates, weights = load_data(args.filename)
-    fenton_data = load_fenton_data(due_date)
+    baby_dates, baby_weights = load_data(args.file_name)
+    fenton_growth_data = load_fenton_data(due_date)
 
-    if dates:
-        plot_data(dates, weights, fenton_data)
+    if baby_dates:
+        plot_data(baby_dates, baby_weights, fenton_growth_data)
 
 if __name__ == "__main__":
     main()
