@@ -1,3 +1,10 @@
+"""
+Script to add weight data for preemies to a CSV file.
+
+Usage:
+python add_weight.py --file <filename> <date> <weight>
+"""
+
 import csv
 from datetime import datetime
 import argparse
@@ -33,7 +40,10 @@ def get_valid_weight(prompt="Enter weight in grams: "):
         if validate_weight(weight_str):
             return weight_str
 
-def main():
+def main() -> None:
+    """
+    Main function to parse arguments, validate inputs, and add weight data to a CSV file.
+    """
     parser = argparse.ArgumentParser(description="Add weight data for preemies.")
     parser.add_argument('--file', type=str, default=DATA_FILENAME, help='Filename to store weight data (default: weight.csv)')
     parser.add_argument('date', nargs='?', help='Date of the weight measurement (YYYY-MM-DD)')

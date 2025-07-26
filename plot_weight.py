@@ -101,36 +101,37 @@ def plot_data(baby_dates: List[datetime], baby_weights: List[float], fenton_grow
     baby_weights (List[float]): Corresponding list of weights for the baby.
     fenton_growth_data (Dict[str, Tuple[List[datetime], List[float]]]): Fenton growth data for comparison.
     """
-    def compute_limits(values):
+    def compute_limits(values, margin_percent=0.05):
         """
-        Compute the limits for a plot axis with a 5% margin.
+        Compute the limits for a plot axis with a specified margin percentage.
     
         Parameters:
         values (List[float]): List of values for the axis.
+        margin_percent (float): Percentage of value range to add/subtract from the min/max values as margin (default: 0.05).
     
         Returns:
-        Tuple[float, float]: Tuple of (min_limit, max_limit) with a 5% margin.
+        Tuple[float, float]: Tuple of (min_limit, max_limit) according to the specified margin.
         """
         range_value = max(values) - min(values)
-        margin = range_value * 0.05  # 5% margin
+        margin = range_value * margin_percent
         return min(values) - margin, max(values) + margin
     
     plt.figure(figsize=(10, 5))
     plt.plot(baby_dates, baby_weights, marker='o', linestyle='', color='b', label='Baby Weight')
     
     line_styles = {
-        '50%': '-',
-        '10%': '--',
-        '90%': '--',
         '3%': ':',
+        '10%': '--',
+        '50%': '-',
+        '90%': '--',
         '97%': ':'
     }
     
     for percentile, data in fenton_growth_data.items():
         plt.plot(data[0], data[1], linestyle=line_styles[percentile], label=f'{percentile} Percentile')
     
-    plt.xlim(*compute_limits(baby_dates))
-    plt.ylim(*compute_limits(baby_weights))
+    plt.xlim(*compute_limits(baby_dates, margin_percent=0.05))
+    plt.ylim(*compute_limits(baby_weights, margin_percent=0.10))
     
     plt.xlabel('Date')
     plt.ylabel('Weight [g]')
