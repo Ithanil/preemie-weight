@@ -3,13 +3,42 @@ Little tool to track and plot weight development of preemies, compared to the Fe
 
 ## Installation
 
-To install the preemie-weight tool, clone the repository and install the required dependencies:
+To install the preemie-weight tool, first clone the repository:
 
 ```bash
 git clone https://github.com/your-repo/preemie-weight.git
 cd preemie-weight
-pip install -r requirements.txt
 ```
+
+Now, install the required dependencies.
+
+### Using Python Virtual Environment
+
+1. **Create a virtual environment:**
+   ```bash
+   python3 -m venv .venv
+   ```
+
+2. **Activate the virtual environment:**
+    ```bash
+    source .venv/bin/activate
+    ```
+
+3. **Install the required packages:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Using System Package Manager
+
+Alternatively, you can install the required packages using your system's package manager. For example, on Ubuntu:
+
+```bash
+sudo apt-get update
+sudo apt-get install python3-matplotlib
+```
+
+Make sure to activate the virtual environment if you choose the first method before running the script.
 
 ## Usage
 
