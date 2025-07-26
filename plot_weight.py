@@ -101,17 +101,37 @@ def plot_data(baby_dates: List[datetime], baby_weights: List[float], fenton_grow
     baby_weights (List[float]): Corresponding list of weights for the baby.
     fenton_growth_data (Dict[str, Tuple[List[datetime], List[float]]]): Fenton growth data for comparison.
     """
+    def compute_limits(values):
+        """
+        Compute the limits for a plot axis with a 5% margin.
+    
+        Parameters:
+        values (List[float]): List of values for the axis.
+    
+        Returns:
+        Tuple[float, float]: Tuple of (min_limit, max_limit) with a 5% margin.
+        """
+        range_value = max(values) - min(values)
+        margin = range_value * 0.05  # 5% margin
+        return min(values) - margin, max(values) + margin
+    
     plt.figure(figsize=(10, 5))
     plt.plot(baby_dates, baby_weights, marker='o', linestyle='', color='b', label='Baby Weight')
-
+    
+    line_styles = {
+        '50%': '-',
+        '10%': '--',
+        '90%': '--',
+        '3%': ':',
+        '97%': ':'
+    }
+    
     for percentile, data in fenton_growth_data.items():
-        plt.plot(data[0], data[1], linestyle='--', label=f'{percentile} Percentile')
-
-    # Set x-axis limits with a small margin
-    date_range = max(baby_dates) - min(baby_dates)
-    margin = date_range * 0.05  # 5% margin
-    plt.xlim(min(baby_dates) - margin, max(baby_dates) + margin)
-
+        plt.plot(data[0], data[1], linestyle=line_styles[percentile], label=f'{percentile} Percentile')
+    
+    plt.xlim(*compute_limits(baby_dates))
+    plt.ylim(*compute_limits(baby_weights))
+    
     plt.xlabel('Date')
     plt.ylabel('Weight [g]')
     plt.title('Weight Development')
