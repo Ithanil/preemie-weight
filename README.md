@@ -42,6 +42,20 @@ Make sure to activate the virtual environment if you choose the first method bef
 
 ## Usage
 
+## GUI Usage
+
+Run the graphical interface with:
+
+```bash
+python gui_plot_weight.py
+```
+
+- Use **Browse...** to select a weight CSV file (or provide a full path).
+- Enter the **Due Date** in `YYYY-MM-DD` format.
+- Click **Plot** to display the baby's weight curve together with the Fenton percentiles inside the window.
+
+The GUI provides the same functionality as the command‑line version, with interactive file selection and embedded plot.
+
 To use the tool, run the `add_weight.py` script to add weight data and `plot_weight.py` to generate plots.
 
 ### Adding Weight Data

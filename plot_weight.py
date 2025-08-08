@@ -7,12 +7,14 @@ Usage:
 python plot_weight.py <filename> --due-date <YYYY-MM-DD>
 """
 
+import matplotlib
 import matplotlib.pyplot as plt
 import csv
 import argparse
 from datetime import datetime, timedelta
 from typing import List, Tuple, Dict
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -34,7 +36,11 @@ def load_data(file_name: str) -> Tuple[List[datetime], List[float]]:
     dates: List[datetime] = []
     weights: List[float] = []
 
-    file_path = f"{DATA_DIRECTORY}/{file_name}"
+    # Allow full or relative paths; if a path separator is present, use the provided path directly
+    if os.path.sep in file_name or os.path.isabs(file_name):
+        file_path = file_name
+    else:
+        file_path = f"{DATA_DIRECTORY}/{file_name}"
 
     try:
         with open(file_path, 'r') as f:
@@ -92,7 +98,7 @@ def load_fenton_data(due_date: datetime) -> Dict[str, Tuple[List[datetime], List
 
     return fenton_data
 
-def plot_data(baby_dates: List[datetime], baby_weights: List[float], fenton_growth_data: Dict[str, Tuple[List[datetime], List[float]]]) -> None:
+def plot_data(baby_dates: List[datetime], baby_weights: List[float], fenton_growth_data: Dict[str, Tuple[List[datetime], List[float]]]) -> matplotlib.figure.Figure:
     """
     Plot the weight data against dates.
 
@@ -116,7 +122,7 @@ def plot_data(baby_dates: List[datetime], baby_weights: List[float], fenton_grow
         margin = range_value * margin_percent
         return min(values) - margin, max(values) + margin
     
-    plt.figure(figsize=(10, 5))
+    fig = plt.figure(figsize=(10, 5))
     plt.plot(baby_dates, baby_weights, marker='o', linestyle='', color='b', label='Baby Weight')
     
     line_styles = {
@@ -140,7 +146,8 @@ def plot_data(baby_dates: List[datetime], baby_weights: List[float], fenton_grow
     plt.xticks(rotation=45)
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    plt.tight_layout()
+    return plt.gcf()
 
 def main() -> None:
     """
@@ -156,7 +163,8 @@ def main() -> None:
     fenton_growth_data = load_fenton_data(due_date)
 
     if baby_dates:
-        plot_data(baby_dates, baby_weights, fenton_growth_data)
+        fig = plot_data(baby_dates, baby_weights, fenton_growth_data)
+        plt.show()
 
 if __name__ == "__main__":
     main()
